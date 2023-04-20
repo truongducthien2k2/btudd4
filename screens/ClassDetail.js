@@ -4,37 +4,43 @@ import * as SQLite from 'expo-sqlite';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NavigationContainer } from '@react-navigation/native';
 
-const db = SQLite.openDatabase('mydb36.db');
+const db = SQLite.openDatabase('class.db');
 
 export default function ClassDetails({ route }) {
-  const { idname } = route.params;
-  const [constant, setConstant] = useState(null);
+  const constants = route.params.constantData;
   const [students, setStudents] = useState([]);
 
   useEffect(() => {
     db.transaction(tx => {
       tx.executeSql(
-        'SELECT * FROM constants WHERE idname = ?',
-        [idname],
-        (_, { rows }) => setConstant(rows._array[0])
+        'DROP TABLE students'
       );
       tx.executeSql(
-        'CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, job TEXT, constant_idname TEXT, FOREIGN KEY(constant_idname) REFERENCES constants(idname));'
+        'CREATE TABLE IF NOT EXISTS students (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, idname TEXT, dob DATE, constant_idname TEXT, FOREIGN KEY(constant_idname) REFERENCES constants(idname));'
       );
-      tx.executeSql('INSERT INTO students (name, job, constant_idname) VALUES (?, ?, ?)',['abc', 'thien', idname]
+      tx.executeSql(
+        'INSERT INTO students (name, idname, dob, constant_idname) VALUES (?, ?, ?, ?)',
+        ['avc', 'Pror', '2002/01/01', constants.idname]
       );
-      tx.executeSql('INSERT INTO students (name, job, constant_idname) VALUES (?, ?, ?)',['bcd', 'nam', idname]
+      tx.executeSql(
+        'INSERT INTO students (name, idname, dob, constant_idname) VALUES (?, ?, ?, ?)',
+        ['Js', 'studenta', '2002/01/01', constants.idname]
       );
-      tx.executeSql('SELECT * FROM students WHERE constant_idname = ?',[idname],(_, { rows }) => setStudents(rows._array)
+      tx.executeSql(
+        'SELECT * FROM students WHERE constant_idname = ?',
+        [constants.idname],
+        (_, { rows }) => setStudents(rows._array)
       );
     });
   }, []);
 
   const renderItem = ({ item }) => {
+    console.log(item.dob);
     return (
-      <View style={styles.studentContainer}>
+      <View style={styles.constantContainer}>
         <Text style={styles.studentText}>Name: {item.name}</Text>
-        <Text style={styles.studentText}>Job: {item.job}</Text>
+        <Text style={styles.studentText}>Idname: {item.idname}</Text>
+        <Text style={styles.studentText}>DoB: {item.dob}</Text>
       </View>
     );
   };
@@ -45,17 +51,16 @@ export default function ClassDetails({ route }) {
         <Text>Loading...</Text>
       </View>
     );
-  }
-
+    }
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Constant Detail</Text>
+        <Text style={styles.title}>Class Detail</Text>
       </View>
       <View style={styles.constantContainer}>
-        <Text style={styles.constantText}>ID Name: {constant.idname}</Text>
-        <Text style={styles.constantText}>Name: {constant.name}</Text>
-        <Text style={styles.constantText}>Quantity: {constant.quantity}</Text>
+        <Text style={styles.constantText}>ID Name: {constants.idname}</Text>
+        <Text style={styles.constantText}>Name: {constants.name}</Text>
+        <Text style={styles.constantText}>Quantity: {constants.quantity}</Text>
       </View>
       <FlatList
         data={students}
@@ -95,5 +100,9 @@ const styles = StyleSheet.create({
       constantText: {
         fontSize: 18,
         fontWeight: 'bold',
+      },
+      studentText: {
+        fontSize: 15,
+        fontWeight: '500',
       },
 })
